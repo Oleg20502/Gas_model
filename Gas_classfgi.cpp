@@ -7,7 +7,7 @@
 #include <fstream>
 #include <chrono>
 
-using std::min, std::max, std::sqrt, std::pow, std::abs;
+using std::min, std::max, std::sqrt, std::pow, std::abs, std::floor;
 
 double vec_mod(double x, double y, double z)
 {
@@ -30,7 +30,8 @@ double sim_sum(std::vector<std::vector<double>> const &vec, size_t I)
 
 double force(double r, double eps=1.0, double sigma=1.0)
     {
-        return -24.0*eps*(2*pow(sigma/(r*r), 11) - pow(sigma/(r*r), 5));
+        double a = pow(sigma/r, 6);
+        return -24.0*eps*(2*a*a - a)/r;
     }
 
 
@@ -111,21 +112,29 @@ public:
         return vec_mod(min(dx, x_size-dx), min(dy, y_size-dy), min(dz, z_size-dz));
     }
 
+    double get_projection(double x, double y)
+    {
+        //if (abs())
+    }
+
     void iter(double dt)
     {
-        for(int i = 0; i<N; ++i){
+        for(int i = 0; i<N-1; ++i){
             for(int j = i+1; j<N; ++j){
                 count_forces(i, j);
             }
+//            change_speed(i, dt/2);
+//            change_position(i, dt);
         }
         for(int i = 0; i<N; ++i){
             change_speed(i, dt/2);
             change_position(i, dt);
         }
-         for(int i = 0; i<N; ++i){
+        for(int i = 0; i<N-1; ++i){
             for(int j = i+1; j<N; ++j){
                 count_forces(i, j);
             }
+//            change_speed(i, dt/2);
         }
         for(int i = 0; i<N; ++i){
             change_speed(i, dt/2);
@@ -145,9 +154,28 @@ public:
         r = get_distance(i, j);
         R[i][j] = r;
         F[i][j] = force(r);
-        Fx[i][j] = F[i][j] * p[i].x / r;
-        Fy[i][j] = F[i][j] * p[i].y / r;
-        Fy[i][j] = F[i][j] * p[i].z / r;
+
+        dx = p[j].x - p[i].x;
+        if(dx > x_size/2)
+            dx -= x_size;
+        else if(dx < -x_size/2)
+            dx += x_size;
+
+        dy = p[j].y - p[i].y;
+        if(dy > y_size/2)
+            dy -= y_size;
+        else if(dy < -y_size/2)
+            dy += y_size;
+
+        dz = p[j].z - p[i].z;
+        if(dz > z_size/2)
+            dz -= z_size;
+        else if(dz < -z_size/2)
+            dz += z_size;
+
+        Fx[i][j] = F[i][j] * dx / r;
+        Fy[i][j] = F[i][j] * dy / r;
+        Fy[i][j] = F[i][j] * dz / r;
     }
 
     void change_speed(int i, double const &dt)
@@ -162,6 +190,10 @@ public:
         p[i].x += p[i].v_x * dt;
         p[i].y += p[i].v_y * dt;
         p[i].z += p[i].v_z * dt;
+
+        p[i].x -= floor(p[i].x / x_size)*x_size;
+        p[i].y -= floor(p[i].y / y_size)*y_size;
+        p[i].z -= floor(p[i].z / z_size)*z_size;
     }
 
     double count_energy_of_system()
@@ -175,7 +207,7 @@ public:
                 if(i!=j)
                 {
                     r = get_distance(i, j);
-                    W = W + 4*eps*(pow((sigma/r),12) - pow((sigma/r),6));
+                    W = W + 4*eps*(pow((sigma/r),12) - pow((sigma/r),6)) * p[i].m * p[j].m;
                 }
             }
         }
@@ -245,11 +277,11 @@ public:
 
 int main()
 {
-    int n = 10;
-    double T = 10.0;
+    int n = 2;
+    double T = 1.0;
     double dt = 0.001;
-    double tau = 0.1;
-    Space s(n, 20, 20, 20);
+    double tau = 0.01;
+    Space s(n, 5, 5, 5);
     s.set_points();
     s.set_v(0, 1);
 
@@ -259,12 +291,13 @@ int main()
     int J = static_cast<int> (tau/dt);
     for(int i=0; i<I; ++i){
         if (i%J == 0){
-            std::cout << s.count_energy_of_system() << std::endl;
+            std::cout << "E = " << s.count_energy_of_system() << std::endl;
+            std::cout << "r = " << s.R[0][1] << std::endl;
         }
         s.iter(dt);
     }
 
-    s.save_points("Points_data.txt");
+    //s.save_points("Points_data.txt");
 
     return 0;
 }
