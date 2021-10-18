@@ -28,10 +28,34 @@ double sim_sum(std::vector<std::vector<double>> const &vec, size_t I)
     return sum;
 }
 
+double sum(std::vector<double> const &vec)
+{
+
+    double sum = 0;
+    for(int i = 0; i<vec.size(); ++i)
+    {
+        sum += vec[i];
+    }
+    return sum;
+}
+
+double find_min(std::vector<std::vector<double>> const &vec, int N)
+{
+    double min = 1000000000.0;
+    for(int i = 0; i<N; ++i){
+        for(int j = 0; j<N; ++j){
+            if(vec[i][j] < min && vec[i][j] != 0){
+                min = vec[i][j];
+            }
+        }
+    }
+    return min;
+}
+
 double force(double r, double eps=1.0, double sigma=1.0)
     {
         double a = pow(sigma/r, 6);
-        return -24.0*eps*(2*a*a - a)/r;
+        return 24.0*eps*(2*a - 1)*a/r;
     }
 
 
@@ -74,11 +98,11 @@ public:
         R{std::vector<std::vector<double>> (N, std::vector<double> (N))}
         {
             for(int i=0; i<N; ++i){
-                Fx[i][i] = Fy[i][i] = Fz[i][i] = R[i][i] = 0.;
+                Fx[i][i] = Fy[i][i] = Fz[i][i] = R[i][i] = F[i][i] = 0.;
             }
         }
 
-    void set_points()
+    void set_random_points()
     {
         std::uniform_real_distribution <double> disx(0.d , x_size);
         std::uniform_real_distribution <double> disy(0.d , y_size);
@@ -90,11 +114,20 @@ public:
             p[i].y = disy(rng);
             p[i].z = disz(rng);
         }
+
+        for(int i = 0; i<N-1; ++i){
+            for(int j = i+1; j<N; ++j){
+                R[i][j] = get_distance(i, j);
+                R[j][i] = R[i][j];
+            }
+        }
     }
 
-    void set_v(double mean, double std)
+
+
+    void set_random_speed(double mean, double std)
     {
-        std::normal_distribution <> disv(mean, std);
+        std::normal_distribution <double> disv(mean, std);
 
         for(int i=0; i<N; i++)
         {
@@ -110,11 +143,6 @@ public:
         dy = abs(p[i].y - p[j].y);
         dz = abs(p[i].z - p[j].z);
         return vec_mod(min(dx, x_size-dx), min(dy, y_size-dy), min(dz, z_size-dz));
-    }
-
-    double get_projection(double x, double y)
-    {
-        //if (abs())
     }
 
     void iter(double dt)
@@ -153,60 +181,67 @@ public:
     {
         r = get_distance(i, j);
         R[i][j] = r;
-        F[i][j] = force(r);
+        R[j][i] = r;
 
-        dx = p[j].x - p[i].x;
-        if(dx > x_size/2)
-            dx -= x_size;
-        else if(dx < -x_size/2)
-            dx += x_size;
+        F[i][j] = force(r, eps, sigma);
+        F[j][i] = F[i][j];
 
-        dy = p[j].y - p[i].y;
-        if(dy > y_size/2)
-            dy -= y_size;
-        else if(dy < -y_size/2)
-            dy += y_size;
+        dx = p[i].x - p[j].x;
+        if(dx > x_size/2) dx -= x_size;
+        else if(dx < -x_size/2) dx += x_size;
 
-        dz = p[j].z - p[i].z;
-        if(dz > z_size/2)
-            dz -= z_size;
-        else if(dz < -z_size/2)
-            dz += z_size;
+        dy = p[i].y - p[j].y;
+        if(dy > y_size/2) dy -= y_size;
+        else if(dy < -y_size/2) dy += y_size;
+
+        dz = p[i].z - p[j].z;
+        if(dz > z_size/2) dz -= z_size;
+        else if(dz < -z_size/2) dz += z_size;
 
         Fx[i][j] = F[i][j] * dx / r;
         Fy[i][j] = F[i][j] * dy / r;
-        Fy[i][j] = F[i][j] * dz / r;
+        Fz[i][j] = F[i][j] * dz / r;
+
+        Fx[j][i] = Fx[i][j];
+        Fy[j][i] = Fy[i][j];
+        Fz[j][i] = Fz[i][j];
     }
 
-    void change_speed(int i, double const &dt)
+    void change_speed(int i, double dt)
     {
-        p[i].v_x += sim_sum(Fx, i)/p[i].m * dt;
-        p[i].v_y += sim_sum(Fy, i)/p[i].m * dt;
-        p[i].v_z += sim_sum(Fz, i)/p[i].m * dt;
+//        p[i].v_x += sim_sum(Fx, i)/p[i].m * dt;
+//        p[i].v_y += sim_sum(Fy, i)/p[i].m * dt;
+//        p[i].v_z += sim_sum(Fz, i)/p[i].m * dt;
+
+        p[i].v_x += sum(Fx[i])/p[i].m * dt;
+        p[i].v_y += sum(Fy[i])/p[i].m * dt;
+        p[i].v_z += sum(Fz[i])/p[i].m * dt;
     }
 
-    void change_position(int i, double const &dt)
+    void change_position(int i, double dt)
     {
         p[i].x += p[i].v_x * dt;
         p[i].y += p[i].v_y * dt;
         p[i].z += p[i].v_z * dt;
 
-        p[i].x -= floor(p[i].x / x_size)*x_size;
-        p[i].y -= floor(p[i].y / y_size)*y_size;
-        p[i].z -= floor(p[i].z / z_size)*z_size;
+        if (p[i].x > x_size) {p[i].x -= x_size;}
+        else if (p[i].x < 0) {p[i].x += x_size;}
+
+        if (p[i].y > y_size) {p[i].y -= y_size;}
+        else if (p[i].y < 0) {p[i].y += y_size;}
+
+        if (p[i].z > z_size) {p[i].z -= z_size;}
+        else if (p[i].z < 0) {p[i].z += z_size;}
     }
 
-    double count_energy_of_system()
+    double count_energy()
     {
         double W = 0;
-        for(int i = 0; i<N; i++)
-        {
-            W = W + (p[i].m*vec_mod(p[i].v_x, p[i].v_y, p[i].v_z)*vec_mod(p[i].v_x, p[i].v_y, p[i].v_z ))/2.0;
-            for(int j =0; j<N; j++)
-            {
-                if(i!=j)
-                {
-                    r = get_distance(i, j);
+        for(int i = 0; i<N; ++i){
+            W = W + p[i].m * (pow(p[i].v_x, 2) + pow(p[i].v_y, 2) + pow(p[i].v_z, 2)) / 2.0;
+            for(int j = 0; j<N; ++j){
+                if(i!=j){
+                    r = R[i][j];
                     W = W + 4*eps*(pow((sigma/r),12) - pow((sigma/r),6)) * p[i].m * p[j].m;
                 }
             }
@@ -230,8 +265,6 @@ public:
                 }
             }
         }
-
-
 
         double deltav = vec_mod(Vr[N-1].v_x, Vr[N-1].v_y, Vr[N-1].v_z) - vec_mod(Vr[0].v_x, Vr[0].v_y, Vr[0].v_z);
 
@@ -259,40 +292,65 @@ public:
             out << " \n";
             for(int i=0; i<N; ++i){
                 out << i << ' ' << p[i].x << ' ' << p[i].y << ' ' << p[i].z << '\n';
-                //<< ' ' << p[i].v_x << ' ' << p[i].v_y << ' ' << p[i].v_z << '\n';
             }
         }
     }
 
-    void load_data(std::string path)
+    void save_speed(std::string path)
+    {
+        std::ofstream out(path);
+        if (out.is_open()){
+            out << N << '\n';
+            out << " \n";
+            for(int i=0; i<N; ++i){
+                out << i << ' ' << p[i].v_x << ' ' << p[i].v_y << ' ' << p[i].v_z << '\n';
+            }
+        }
+    }
+
+    void load_points(std::string path)
     {
         std::ifstream out(path);
-        int i = 0;
-        if (out.is_open()){
 
+        if (out.is_open()){
+             out >> N;
+             for(int i=0; i<N; ++i){
+                out >> p[i].x >> p[i].y >> p[i].z;
+             }
         }
-        out.close();
+    }
+
+    void load_velocity(std::string path)
+    {
+        std::ifstream out(path);
+
+        if (out.is_open()){
+             out >> N;
+             for(int i=0; i<N; ++i){
+                out >> p[i].v_x >> p[i].v_y >> p[i].v_z;
+             }
+        }
     }
 };
 
 int main()
 {
-    int n = 2;
+    int n = 45;
     double T = 1.0;
-    double dt = 0.001;
+    double dt = 1/pow(2, 10);
     double tau = 0.01;
-    Space s(n, 5, 5, 5);
-    s.set_points();
-    s.set_v(0, 1);
+    Space s(n, 35.0, 35.0, 35.0);
+    s.set_random_points();
+    s.set_random_speed(0, 1);
 
-    //std::cout << s.count_energy_of_system() << std::endl;
+    //std::cout << s.count_energy() << std::endl;
 
     int I = static_cast<int> (T/dt);
     int J = static_cast<int> (tau/dt);
     for(int i=0; i<I; ++i){
         if (i%J == 0){
-            std::cout << "E = " << s.count_energy_of_system() << std::endl;
-            std::cout << "r = " << s.R[0][1] << std::endl;
+            std::cout << "E = " << s.count_energy();
+            std::cout << "  rmin = " << find_min(s.R, n) << std::endl;
         }
         s.iter(dt);
     }
