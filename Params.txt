@@ -1,0 +1,23 @@
+# N (number of particles)
+50
+# x_size
+30.0
+# y_size
+30.0
+# z_size
+30.0
+# T 
+20.0
+# dt
+0.001
+# period to write data
+0.05
+# epsilon
+1.0
+#sigma
+1.0
+# speed mean
+0.0
+# speed std
+1.0
+
