@@ -134,6 +134,39 @@ public:
         }
     }
 
+    void set_crystal_cell()
+    {
+        if(N==1)
+        {
+            p[0].x = x_size/2;
+            p[0].y = y_size/2;
+            p[0].z = z_size/2;
+        }
+
+        if(N>1)
+        {
+            int x = static_cast<int>((log(N)/log(8)))+1;
+            int number_of_cubes = pow(8,x);
+            float s_x = x_size/pow(2,x);
+            float s_y = s_x*y_size/x_size;
+            float s_z = s_x*z_size/x_size;
+            for(int i = 0; i<pow(2,x); i++)
+            {
+                for(int j =0; j<pow(2,x); j++)
+                {
+                    for(int y=0; y<pow(2,x); y++)
+                    {
+                        p[i*pow(4,x)+j*pow(2,x)+k].x = s_x*(2*i+1);
+                        p[i*pow(4,x)+j*pow(2,x)+k].y = s_y*(2*y+1);
+                        p[i*pow(4,x)+j*pow(2,x)+k].z = s_z*(2*j+1);
+
+                    }
+                }
+            }
+        }
+
+    }
+
     void set_grid_points()
     {
         double k = pow(static_cast<double> (0.9*N/x_size/y_size/z_size), 1.0/3);
