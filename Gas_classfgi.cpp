@@ -99,10 +99,6 @@ private:
     double dx, dy, dz;
 
     std::mt19937_64 rng{time(0)};
-    //std::default_random_engine rng{seed};
-
-    double a[100] = {0};
-
 
 public:
     Space(unsigned int n, double x_size, double y_size, double z_size, double eps, double sigma):
@@ -148,7 +144,7 @@ public:
             p[0].z = z_size/2;
         }
 
-        if(N>1)
+        else if(N>1)
         {
             int x = static_cast<int>((log(N)/log(8)))+1;
             int number_of_cubes = pow(8,x);
@@ -169,7 +165,11 @@ public:
                 }
             }
         }
-
+        for(int i = 0; i<N-1; ++i){
+            for(int j = i+1; j<N; ++j){
+                count_forces(i, j);
+            }
+        }
     }
 
     void set_grid_points()
@@ -550,7 +550,7 @@ void process(std::string path)
 
     Space s(N, x_size, y_size, z_size, eps, sigma);
     s.set_random_points();
-    //s.set_grid_points();
+    //s.set_crystal_cell();
     s.set_random_speed(v_mean, v_std);
 
     s.save_points("Points_data.txt", false);
