@@ -80,11 +80,12 @@ struct Point{
 
 class Space{
 private:
-    double x_size, y_size, z_size, r, eps = 1.0, sigma = 1.0;
+    double x_size, y_size, z_size, r, r_max, eps = 1.0, sigma = 1.0;
     double E, Ekin, U, Q, Qx, Qy, Qz, P;
-    double temperature_e, temperature_m, k = 0.01;
+    double temperature_e, k = 0.01;
     double E_mean, Ekin_mean, U_mean, Q_mean, Qx_mean, Qy_mean, Qz_mean, P_mean;
-    double temperature_e_mean, temperature_m_mean;
+    double temperature_e_mean;
+    double t;
     unsigned int N;
     std::vector<Point> p;
     std::vector<Point> px0;
@@ -127,47 +128,34 @@ public:
             p[i].y = disy(rng);
             p[i].z = disz(rng);
         }
-
-        for(int i = 0; i<N-1; ++i){
-            for(int j = i+1; j<N; ++j){
-                count_forces(i, j);
-            }
-        }
     }
 
     void set_crystal_cell()
     {
-        if(N==1)
+        int n;
+        if((log(N)/log(8))-static_cast<int>(log(N)/log(8)) > 0)
         {
-            p[0].x = x_size/2;
-            p[0].y = y_size/2;
-            p[0].z = z_size/2;
+            n = static_cast<int>((log(N)/log(8)))+1;
         }
-
-        else if(N>1)
+        else
         {
-            int x = static_cast<int>((log(N)/log(8)))+1;
-            int number_of_cubes = pow(8,x);
-            float s_x = x_size/pow(2,x);
-            float s_y = s_x*y_size/x_size;
-            float s_z = s_x*z_size/x_size;
-            for(int i = 0; i<pow(2,x); i++)
-            {
-                for(int j =0; j<pow(2,x); j++)
-                {
-                    for(int y=0; y<pow(2,x); y++)
-                    {
-                        p[i*pow(4,x)+j*pow(2,x)+k].x = s_x*(2*i+1);
-                        p[i*pow(4,x)+j*pow(2,x)+k].y = s_y*(2*y+1);
-                        p[i*pow(4,x)+j*pow(2,x)+k].z = s_z*(2*j+1);
-
+            n = log(N)/log(8);
+        }
+        int number_of_cubes = pow(8,n);
+        float s_x = x_size/pow(2,n);
+        float s_y = y_size/pow(2,n);
+        float s_z = z_size/pow(2,n);
+        int tmp = 0;
+        for(int i = 0; i<pow(2,n); i++){
+            for(int j =0; j<pow(2,n); j++){
+                for(int k=0; k<pow(2,n); k++){
+                    tmp = i*pow(4,n)+j*pow(2,n)+k;
+                    if(tmp < N){
+                        p[tmp].x = s_x*(2*i+1)/2;
+                        p[tmp].y = s_y*(2*k+1)/2;
+                        p[tmp].z = s_z*(2*j+1)/2;
                     }
                 }
-            }
-        }
-        for(int i = 0; i<N-1; ++i){
-            for(int j = i+1; j<N; ++j){
-                count_forces(i, j);
             }
         }
     }
@@ -262,13 +250,25 @@ public:
         int I = static_cast<int> (T/dt);
         int J = static_cast<int> (tau/dt);
         int counter = 0;
+        r_max = 2.5*sigma;
         E_mean = Ekin_mean = U_mean = Q_mean = Qx_mean = Qy_mean = Qz_mean = 0.0;
-        P_mean = temperature_e_mean = temperature_m_mean = 0.0;
-        std::cout << std::setprecision(5);
-        std::cout << std::fixed;
+        P_mean = temperature_e_mean = t = 0.0;
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+
+        for(int i = 0; i<N-1; ++i){
+            for(int j = i+1; j<N; ++j){
+                count_forces(i, j);
+            }
+        }
+        save_points("Data/Points_data.txt", false);
+        save_speed("Data/Speed_data.txt", false);
+        save_system_data("Data/System_data.txt", false);
+
         for(int i=0; i<I; ++i){
             if (counter == J){
                 counter = 0;
+                t = i*dt;
                 E_mean /= J;
                 Ekin_mean /= J;
                 U_mean /= J;
@@ -277,25 +277,27 @@ public:
                 Qy_mean /= J;
                 Qz_mean /= J;
                 temperature_e_mean /= J;
-                temperature_m_mean /= J;
                 P_mean /= J;
-                std::cout << "t = " << i*dt << '\n';
+
+                //std::cout << "t = " << t << '\n';
                 std::cout << "E = " << E_mean;
-                std::cout << "  Impulse = " << Q_mean;
+                std::cout << " Impulse = " << Q_mean;
                 std::cout << " Te = " << temperature_e_mean;
-                std::cout << " Tm = " << temperature_m_mean;
+                //std::cout << " Tm = " << temperature_m_mean;
                 std::cout << " P = " << P << '\n';
                 //std::cout << "  rmin = " << find_min(R, N) << std::endl;
-                save_points("Points_data.txt", true);
+                save_points("Data/Points_data.txt", true);
+                save_speed("Data/Speed_data.txt", true);
+                save_system_data("Data/System_data.txt", true);
+
                 E_mean = Ekin_mean = U_mean = Q_mean = Qx_mean = Qy_mean = Qz_mean = 0.0;
-                P_mean = temperature_e_mean = temperature_m_mean = 0.0;
+                P_mean = temperature_e_mean = 0.0;
             }
             iter(dt);
 
             count_energy();
             count_impulse();
             count_energy_temperature();
-            count_maxwell_temperature();
             count_pressure();
 
             E_mean += E;
@@ -306,7 +308,6 @@ public:
             Qy_mean += Qy;
             Qz_mean += Qz;
             temperature_e_mean += temperature_e;
-            temperature_m_mean += temperature_m;
             P_mean += P;
             ++counter;
         }
@@ -319,12 +320,6 @@ public:
         R[j][i] = r;
 
         F[i][j] = LJP_force(r, eps, sigma);
-//        if (r < 3*eps){
-//            F[i][j] = LJP_force(r, eps, sigma);
-//        }
-//        else{
-//            F[i][j] = 0;
-//        }
         F[j][i] = F[i][j];
 
         dx = p[i].x - p[j].x;
@@ -346,6 +341,43 @@ public:
         Fx[j][i] = -Fx[i][j];
         Fy[j][i] = -Fy[i][j];
         Fz[j][i] = -Fz[i][j];
+    }
+
+    void count_cut_forces(int i, int j)
+    {
+        r = get_distance(i, j);
+        R[i][j] = r;
+        R[j][i] = r;
+
+        if (r < r_max){
+            F[i][j] = LJP_force(r, eps, sigma);
+            F[j][i] = F[i][j];
+
+            dx = p[i].x - p[j].x;
+            if(dx > x_size/2) dx -= x_size;
+            else if(dx < -x_size/2) dx += x_size;
+
+            dy = p[i].y - p[j].y;
+            if(dy > y_size/2) dy -= y_size;
+            else if(dy < -y_size/2) dy += y_size;
+
+            dz = p[i].z - p[j].z;
+            if(dz > z_size/2) dz -= z_size;
+            else if(dz < -z_size/2) dz += z_size;
+
+            Fx[i][j] = F[i][j] * dx / r;
+            Fy[i][j] = F[i][j] * dy / r;
+            Fz[i][j] = F[i][j] * dz / r;
+
+            Fx[j][i] = -Fx[i][j];
+            Fy[j][i] = -Fy[i][j];
+            Fz[j][i] = -Fz[i][j];
+        }
+        else{
+            F[i][j] = F[j][i] = 0;
+            Fx[i][j] = Fx[i][j] = Fx[i][j] = 0.0;
+            Fx[j][i] = Fx[j][i] = Fx[j][i] = 0.0;
+        }
     }
 
     void change_speed(int i, double dt)
@@ -399,16 +431,6 @@ public:
         temperature_e = 2.0/3*Ekin/N/k;
     }
 
-    void count_maxwell_temperature()
-    {
-        double v2_msk = 0.0;
-        for(int i=0; i<N; ++i){
-            v2_msk += pow(p[i].v_x, 2) + pow(p[i].v_y, 2) + pow(p[i].v_z, 2);
-        }
-        v2_msk /= N;
-        temperature_m = v2_msk/3/k;
-    }
-
     void count_pressure()
     {
         P = 0;
@@ -460,9 +482,28 @@ public:
         if (out.is_open()){
             //out << N << '\n';
             //out << " \n";
+            out << std::setprecision(10);
+            out << std::scientific;
             for(int i=0; i<N; ++i){
-                out << i << ' ' << p[i].v_x << ' ' << p[i].v_y << ' ' << p[i].v_z << '\n';
+                out << p[i].v_x << ' ' << p[i].v_y << ' ' << p[i].v_z << '\n';
             }
+        }
+        out.close();
+    }
+
+    void save_system_data(std::string path, bool save)
+    {
+        std::ofstream out;
+        if (save){
+            out.open(path, std::ios::app);
+        }
+        else{
+            out.open(path);
+        }
+        if (out.is_open()){
+            out << std::setprecision(10);
+            out << std::scientific;
+            out << t << ' ' << E << ' ' << Q << ' ' << temperature_e << '\n';
         }
         out.close();
     }
@@ -482,11 +523,12 @@ public:
     void load_speed(std::string path)
     {
         std::ifstream out(path);
-        int a;
+        //int a;
         if (out.is_open()){
-             out >> N;
+             //out >> N;
              for(int i=0; i<N; ++i){
-                out >> a >> p[i].v_x >> p[i].v_y >> p[i].v_z;
+                //out >> a >> p[i].v_x >> p[i].v_y >> p[i].v_z;
+                out >> p[i].v_x >> p[i].v_y >> p[i].v_z;
              }
         }
     }
@@ -549,18 +591,14 @@ void process(std::string path)
     std::cout << N << " particles" << '\n';
 
     Space s(N, x_size, y_size, z_size, eps, sigma);
-    s.set_random_points();
+    //s.set_random_points();
     //s.set_crystal_cell();
-    s.set_random_speed(v_mean, v_std);
+    //s.set_random_speed(v_mean, v_std);
 
-    s.save_points("Points_data.txt", false);
-
-    //s.load_points("Points_data.txt");
-    //s.load_speed("Speed_data.txt");
+    s.load_points("Data/Points_data.txt");
+    s.load_speed("Data/Speed_data.txt");
 
     s.run(T, dt, tau);
-
-    s.save_speed("Speed_data.txt", false);
 }
 
 
