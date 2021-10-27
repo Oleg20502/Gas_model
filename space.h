@@ -1,115 +1,48 @@
-#include <cmath>
-#include <algorithm>
-#include <vector>
-#include <set>
-#include <random>
+#ifndef space_h
+#define space_h
+
 #include <iostream>
-#include <fstream>
-#include <chrono>
+#include <vector>
+#include <random>
+#include <algorithm>
 #include <iomanip>
+#include <chrono>
 
-using std::min, std::max, std::sqrt, std::pow, std::abs, std::floor;
-using std::stoi, std::stod;
+using std::min, std::max, std::abs;
 
-double vec_mod(double x, double y, double z)
-{
-    return sqrt(x*x + y*y + z*z);
-}
-
-std::string parse_line(std::ifstream out)
-{
-    std::string str1, str2;
-    getline(out, str2);
-    getline(out, str1);
-    return str1;
-}
-
-//Alen Computer Simulation of liquids
-double sum(std::vector<double> const &vec)
-{
-    double sum = 0;
-    for(int i = 0; i<vec.size(); ++i)
-    {
-        sum += vec[i];
-    }
-    return sum;
-}
-
-double find_min(std::vector<std::vector<double>> const &vec, int N)
-{
-    double min = 1000000000.0;
-    for(int i = 0; i<N; ++i){
-        for(int j = 0; j<N; ++j){
-            if(vec[i][j] < min && vec[i][j] != 0){
-                min = vec[i][j];
-            }
-        }
-    }
-    return min;
-}
-
-double LJP(double r, double eps=1.0, double sigma=1.0)
-{
-    double a = pow(sigma/r, 6);
-    return 4.0*eps*(a - 1)*a;
-}
-
-double LJP_cut(double r, double rmax, double eps=1.0, double sigma=1.0)
-{
-    if (r < rmax){
-        return LJP(r, eps, sigma) - LJP(rmax, eps, sigma);
-    }
-    else{
-        return 0.0;
-    }
-}
-
-double LJP_force(double r, double eps=1.0, double sigma=1.0)
-    {
-        double a = pow(sigma/r, 6);
-        return 24.0*eps*(2*a - 1)*a/r;
-    }
-
-
-struct Point{
-    double m = 1.0;
-    double x, y, z;
-    double v_x, v_y, v_z;
-};
-
-
+template<typename type>
 class Space{
 private:
-    double x_size, y_size, z_size, r, r_max, eps = 1.0, sigma = 1.0;
-    double E, Ekin, U, Q, Qx, Qy, Qz, P;
-    double temperature_e, k = 0.01;
-    double E_mean, Ekin_mean, U_mean, Q_mean, Qx_mean, Qy_mean, Qz_mean, P_mean;
-    double temperature_e_mean;
-    double t;
+    type x_size, y_size, z_size, r, r_max, eps = 1.0, sigma = 1.0;
+    type E, Ekin, U, Q, Qx, Qy, Qz, P;
+    type temperature_e, k = 0.01;
+    type E_mean, Ekin_mean, U_mean, Q_mean, Qx_mean, Qy_mean, Qz_mean, P_mean;
+    type temperature_e_mean;
+    type t;
     unsigned int N;
-    std::vector<Point> p;
-    std::vector<Point> px0;
-    std::vector<Point> py0;
-    std::vector<Point> pz0;
-    std::vector<std::vector<double>> R;
-    std::vector<std::vector<double>> F;
-    std::vector<std::vector<double>> Fx;
-    std::vector<std::vector<double>> Fy;
-    std::vector<std::vector<double>> Fz;
+    std::vector<Point<type>> p;
+    std::vector<Point<type>> px0;
+    std::vector<Point<type>> py0;
+    std::vector<Point<type>> pz0;
+    std::vector<std::vector<type>> R;
+    std::vector<std::vector<type>> F;
+    std::vector<std::vector<type>> Fx;
+    std::vector<std::vector<type>> Fy;
+    std::vector<std::vector<type>> Fz;
 
-    double dx, dy, dz;
+    type dx, dy, dz;
 
     std::mt19937_64 rng{time(0)};
 
 public:
-    Space(unsigned int n, double x_size, double y_size, double z_size, double eps, double sigma):
+    Space(unsigned int n, type x_size, type y_size, type z_size, type eps, type sigma):
         N{n}, x_size{x_size}, y_size{y_size}, z_size{z_size}, eps{eps}, sigma{sigma},
-        p{std::vector<Point> (N)},
-        F{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        Fx{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        Fy{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        Fz{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        R{std::vector<std::vector<double>> (N, std::vector<double> (N))}
+        p{std::vector<Point<type>> (N)},
+        F{std::vector<std::vector<type>> (N, std::vector<type> (N))},
+        Fx{std::vector<std::vector<type>> (N, std::vector<type> (N))},
+        Fy{std::vector<std::vector<type>> (N, std::vector<type> (N))},
+        Fz{std::vector<std::vector<type>> (N, std::vector<type> (N))},
+        R{std::vector<std::vector<type>> (N, std::vector<type> (N))}
         {
             for(int i=0; i<N; ++i){
                 Fx[i][i] = Fy[i][i] = Fz[i][i] = R[i][i] = F[i][i] = 0.;
@@ -118,9 +51,9 @@ public:
 
     void set_random_points()
     {
-        std::uniform_real_distribution <double> disx(0.d , x_size);
-        std::uniform_real_distribution <double> disy(0.d , y_size);
-        std::uniform_real_distribution <double> disz(0.d , z_size);
+        std::uniform_real_distribution <type> disx(0.d , x_size);
+        std::uniform_real_distribution <type> disy(0.d , y_size);
+        std::uniform_real_distribution <type> disz(0.d , z_size);
 
         for(int i = 0; i<N; i++)
         {
@@ -160,9 +93,9 @@ public:
         }
     }
 
-    void set_random_speed(double mean, double std)
+    void set_random_speed(type mean, type std)
     {
-        std::normal_distribution <double> disv(mean, std);
+        std::normal_distribution <type> disv(mean, std);
 
         for(int i=0; i<N; i++){
             p[i].v_x = disv(rng);
@@ -170,9 +103,9 @@ public:
             p[i].v_z = disv(rng);
         }
 
-        double vc_x, vc_y, vc_z;
+        type vc_x, vc_y, vc_z;
         vc_x = vc_y = vc_z = 0.0;
-        double M = 0;
+        type M = 0;
         for(int i=0; i<N; i++){
             M += p[i].m;
             vc_x += p[i].v_x * p[i].m;
@@ -189,7 +122,7 @@ public:
         }
     }
 
-    double get_distance(int i, int j)
+    type get_distance(int i, int j)
     {
         dx = abs(p[i].x - p[j].x);
         dy = abs(p[i].y - p[j].y);
@@ -197,7 +130,7 @@ public:
         return vec_mod(min(dx, x_size-dx), min(dy, y_size-dy), min(dz, z_size-dz));
     }
 
-    void iter(double dt)
+    void iter(type dt)
     {
         for(int i = 0; i<N; ++i){
             change_speed(i, dt/2);
@@ -215,7 +148,7 @@ public:
         }
     }
 
-    void run(double T, double dt, double tau)
+    void run(type T, type dt, type tau)
     {
         int I = static_cast<int> (T/dt);
         int J = static_cast<int> (tau/dt);
@@ -350,14 +283,14 @@ public:
         }
     }
 
-    void change_speed(int i, double dt)
+    void change_speed(int i, type dt)
     {
         p[i].v_x += sum(Fx[i])/p[i].m * dt;
         p[i].v_y += sum(Fy[i])/p[i].m * dt;
         p[i].v_z += sum(Fz[i])/p[i].m * dt;
     }
 
-    void change_position(int i, double dt)
+    void change_position(int i, type dt)
     {
         p[i].x += p[i].v_x * dt;
         p[i].y += p[i].v_y * dt;
@@ -505,77 +438,4 @@ public:
 };
 
 
-template<typename type>
-void process(std::string path)
-{
-    unsigned int N;
-    type T, dt, tau, x_size, y_size, z_size, eps, sigma, v_mean, v_std;
-    std::ifstream out(path);
-    std::string str1, str2;
-    if (out.is_open()){
-        getline(out, str2);
-        getline(out, str1);
-        N = stoi(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        x_size = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        y_size = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        z_size = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        T = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        dt = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        tau = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        eps = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        sigma = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        v_mean = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
-        v_std = stod(str1);
-    }
-
-    std::cout << N << " particles" << '\n';
-
-    Space s(N, x_size, y_size, z_size, eps, sigma);
-    //s.set_random_points();
-    //s.set_crystal_cell();
-    //s.set_random_speed(v_mean, v_std);
-
-    s.load_points("Data/Points_data.txt");
-    s.load_speed("Data/Speed_data.txt");
-
-    s.run(T, dt, tau);
-}
-
-
-int main()
-{
-    std::string path = "Params.txt";
-    process<double>(path);
-
-    return 0;
-}
+#endif // space_h
