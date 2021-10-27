@@ -160,36 +160,6 @@ public:
         }
     }
 
-    void set_grid_points()
-    {
-        double k = pow(static_cast<double> (0.9*N/x_size/y_size/z_size), 1.0/3);
-        int Nx = floor(k*x_size);
-        int Ny = floor(k*y_size);
-        int Nz = floor(k*z_size);
-        std::cout << Nx << '\n';
-
-        for(int i = 0; i<Nx; ++i){
-            for(int j=0; j<Ny; ++j){
-                for(int m=0; m<Nz; ++m){
-                    p[i + j*Nx + m*Nx*Ny].x = i/k+0.1;
-                    p[i + j*Nx + m*Nx*Ny].y = j/k+0.1;
-                    p[i + j*Nx + m*Nx*Ny].z = m/k+0.1;
-                }
-            }
-        }
-        for(int i=N-1; i>Nx*Ny*Nz-1; --i){
-            p[i].x = (i+0.5)/k;
-            p[i].y = (i+0.5)/k;
-            p[i].z = (i+0.5)/k;
-        }
-
-        for(int i = 0; i<N-1; ++i){
-            for(int j = i+1; j<N; ++j){
-                count_forces(i, j);
-            }
-        }
-    }
-
     void set_random_speed(double mean, double std)
     {
         std::normal_distribution <double> disv(mean, std);
