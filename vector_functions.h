@@ -15,7 +15,7 @@ template<typename type>
 inline
 type sum(std::vector<type> const &vec)
 {
-    type sum = 0;
+    type sum = 0.0;
     for(int i = 0; i<vec.size(); ++i)
     {
         sum += vec[i];

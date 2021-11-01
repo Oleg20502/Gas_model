@@ -14,9 +14,9 @@ Data1 = np.loadtxt(folder+file1)
 
 
 #%%
-Vx = Data1[:N, 0]
-Vy = Data1[:N, 1]
-Vz = Data1[:N, 2]
+Vx = Data1[:, 0]
+Vy = Data1[:, 1]
+Vz = Data1[:, 2]
 print(np.size(Vx))
 
 #%%
@@ -28,18 +28,35 @@ t = Data2[1:, 0]
 E = Data2[1:, 1]
 Q = Data2[1:, 2]
 T = Data2[1:, 3]
+r2 = Data2[1:, 4]
 
 #%%
 fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2,2)
 plt.tight_layout(1.14)
-h1, b, p = ax1.hist(Vx**2, density = True, log = True)
+ax1.hist(Vx, density = False, log = False)
 plt.title(str(np.size(Vx)) + 'points')
 #plt.show()
 #fig, ax = plt.subplot()
-ax2.hist(Vx**2, density = True, log = True)
+ax2.hist(Vy, density = False, log = False)
 #plt.show()
 #fig, ax = plt.subplot()
-ax3.hist(Vx**2, density = True, log = True)
+ax3.hist(Vz, density = False, log = False)
+#plt.show()
+ax4.hist(np.sqrt(Vx**2 + Vy**2 + Vz**2), density = False)
+plt.title('v histogram', fontsize = 12)
+plt.show()
+
+#%%
+fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2,2)
+plt.tight_layout(1.14)
+ax1.hist(Vx**2, density = True, log = True)
+plt.title(str(np.size(Vx)) + 'points')
+#plt.show()
+#fig, ax = plt.subplot()
+ax2.hist(Vy**2, density = True, log = True)
+#plt.show()
+#fig, ax = plt.subplot()
+ax3.hist(Vz**2, density = True, log = True)
 #plt.show()
 ax4.hist(np.sqrt(Vx**2 + Vy**2 + Vz**2), density = True)
 plt.title('v histogram', fontsize = 12)
@@ -48,12 +65,13 @@ plt.show()
 #%%
 fig, ax1 = plt.subplots()
 ax1.plot(t, E)
-#plt.ylim(0.9999*np.min(E), 1.00001*np.max(E))
+ax1.set_ylim([0.999*np.min(E), 1.001*np.max(E)])
 plt.title('E from t', fontsize = 12)
 plt.show()
 #%%
 fig, ax2 = plt.subplots()
 ax2.plot(t, Q)
+#ax2.set_ylim([0.999*np.min(Q), 1.001*np.max(Q)])
 plt.title('Impulse from t', fontsize = 12)
 plt.show()
 #%%
@@ -63,7 +81,10 @@ plt.title('T from t', fontsize = 12)
 plt.show()
 
 #%%
-
+fig, ax4 = plt.subplots()
+ax4.plot(t, r2)
+plt.title('r^2 from t', fontsize = 12)
+plt.show()
 
 
 
