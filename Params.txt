@@ -1,11 +1,11 @@
 # N (number of particles)
-50
+64
 # x_size
-50.0
+8.0
 # y_size
-50.0
+8.0
 # z_size
-50.0
+8.0
 # T 
 5.0
 # dt
