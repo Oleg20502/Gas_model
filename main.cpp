@@ -12,7 +12,8 @@ template<typename type>
 void process(std::string path)
 {
     unsigned int N;
-    type T, dt, tau, x_size, y_size, z_size, eps, sigma, v_mean, v_std;
+    type T, dt, tau, x_size, y_size, z_size, eps, sigma, rmin, v_mean, v_std;
+    bool save;
     std::ifstream out(path);
     std::string str1, str2;
     if (out.is_open()){
@@ -54,11 +55,19 @@ void process(std::string path)
 
         getline(out, str2);
         getline(out, str1);
+        rmin = stod(str1);
+
+        getline(out, str2);
+        getline(out, str1);
         v_mean = stod(str1);
 
         getline(out, str2);
         getline(out, str1);
         v_std = stod(str1);
+
+        getline(out, str2);
+        getline(out, str1);
+        save = stoi(str1);
     }
 
     std::cout << N << " particles" << '\n';
@@ -66,14 +75,14 @@ void process(std::string path)
 
     Space<double> s(N, x_size, y_size, z_size, eps, sigma);
 
-    //s.set_random_points();
+    //s.set_random_points(rmin);
     s.set_crystal_cell();
     s.set_random_speed(v_mean, v_std);
 
     //s.load_points("Data/Points_data.txt");
     //s.load_speed("Data/Speed_data.txt");
 
-    s.run(T, dt, tau);
+    s.run(T, dt, tau, save);
 }
 
 

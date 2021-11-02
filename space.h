@@ -54,17 +54,23 @@ public:
             }
         }
 
-    void set_random_points()
+    void set_random_points(type rmin)
     {
         std::uniform_real_distribution <type> disx(0.d , x_size);
         std::uniform_real_distribution <type> disy(0.d , y_size);
         std::uniform_real_distribution <type> disz(0.d , z_size);
-
-        for(int i = 0; i<N; i++)
-        {
+        int i = 0;
+        while(i < N){
             p[i].x = disx(rng);
             p[i].y = disy(rng);
             p[i].z = disz(rng);
+            ++i;
+            for(int j = 0; j<i-1; ++j){
+                if(get_distance(i, j) < rmin){
+                    --i;
+                    break;
+                }
+            }
         }
     }
 
@@ -314,7 +320,7 @@ public:
         }
     }
 
-    void run(type T, type dt, type tau)
+    void run(type T, type dt, type tau, bool save)
     {
         int I = static_cast<int> (T/dt);
         int J = static_cast<int> (tau/dt);
@@ -339,18 +345,24 @@ public:
 
         std::cout << std::scientific;
         std::cout << std::setprecision(10);
-        std::ofstream out1("Data/Points_data.txt");
-        std::ofstream out2("Data/Speed_data.txt");
-        std::ofstream out3("Data/System_data.txt");
-        out1 << std::setprecision(10);
-        out1 << std::scientific;
-        out2 << std::setprecision(10);
-        out2 << std::scientific;
-        out3 << std::setprecision(10);
-        out3 << std::scientific;
-        save_points(out1);
-        save_speed(out2);
-        save_system_data(out3);
+        auto s = std::ios::app;
+        if(save){
+            s = std::ios::trunc;
+        }
+        std::ofstream out1("Data/Points_data.txt", s);
+        std::ofstream out2("Data/Speed_data.txt", s);
+        std::ofstream out3("Data/System_data.txt", s);
+        if(save){
+            out1 << std::setprecision(10);
+            out1 << std::scientific;
+            out2 << std::setprecision(10);
+            out2 << std::scientific;
+            out3 << std::setprecision(10);
+            out3 << std::scientific;
+            save_points(out1);
+            save_speed(out2);
+            save_system_data(out3);
+        }
 
         for(int i=0; i<I; ++i){
             if (counter == J){
@@ -368,20 +380,23 @@ public:
                 count_r_square_mean();
 
                 //std::cout << "t = " << t << '\n';
-                std::cout << "E = " << E_mean;
-                std::cout << " Impulse = " << Q_mean;
-                std::cout << " Te = " << temperature_e_mean;
-                //std::cout << " P = " << P;
-                //std::cout << "  rmin = " << find_min(R, N);
-                std::cout << " r^2 = " << r2;
+                std::cout << "E = " << E_mean << ' ';
+                //std::cout << "Impulse = " << Q_mean << ' ';
+                std::cout << "Te = " << temperature_e_mean << ' ';
+                //std::cout << "P = " << P << ' ';
+                //std::cout << "rmin = " << find_min(R, N) << ' ';
+                std::cout << "r^2 = " << r2 << ' ';
                 std::cout << '\n';
-                save_points(out1);
-                save_speed(out2);
-                save_system_data(out3);
+                if(save){
+                    save_points(out1);
+                    save_speed(out2);
+                    save_system_data(out3);
+                }
 
                 E_mean = Ekin_mean = U_mean = Q_mean = Qx_mean = Qy_mean = Qz_mean = 0.0;
                 P_mean = temperature_e_mean = 0.0;
             }
+
             iter(dt);
 
             count_energy();
