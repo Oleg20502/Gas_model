@@ -81,10 +81,18 @@ plt.title('T from t', fontsize = 12)
 plt.show()
 
 #%%
+if_b = 0
+A = np.vstack([t, np.full(len(t), if_b)]).T
+m, c = np.linalg.lstsq(A, r2, rcond=None)[0]
+D = np.round(m/6, 4)
+print('Коэф. диффузии D = ' + str(D))
+
 fig, ax4 = plt.subplots()
-ax4.plot(t, r2)
+ax4.plot(t, r2, 'b')
+ax4.plot(t, m*t+c, 'r')
 plt.title('r^2 from t', fontsize = 12)
 plt.show()
+#%%
 
 
 
