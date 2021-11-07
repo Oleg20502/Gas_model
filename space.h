@@ -14,9 +14,9 @@ using std::min, std::max, std::abs, std::pow;
 template<typename type>
 class Space{
 protected:
-    type x_size, y_size, z_size, r, r_max, eps = 1.0, sigma = 1.0;
+    type x_size, y_size, z_size, r, r_max, eps, sigma;
     type E, Ekin, U, Q, Qx, Qy, Qz, P;
-    type temperature_e, k = 0.01;
+    type temperature_e, k;
     type E_mean, Ekin_mean, U_mean, Q_mean, Qx_mean, Qy_mean, Qz_mean, P_mean;
     type temperature_e_mean;
     type t;
@@ -39,8 +39,8 @@ protected:
     std::mt19937_64 rng{(int)(time(0))};
 
 public:
-    Space(unsigned int n, type x_size, type y_size, type z_size, type eps, type sigma):
-        N{n}, x_size{x_size}, y_size{y_size}, z_size{z_size}, eps{eps}, sigma{sigma},
+    Space(unsigned int n, type x_size, type y_size, type z_size, type eps, type sigma, type K):
+        N{n}, x_size{x_size}, y_size{y_size}, z_size{z_size}, eps{eps}, sigma{sigma}, k{K},
         p{std::vector<Point<type>> (N)},
         F{std::vector<std::vector<type>> (N, std::vector<type> (N))},
         Fx{std::vector<std::vector<type>> (N, std::vector<type> (N))},
@@ -385,7 +385,8 @@ public:
                 std::cout << "Te = " << temperature_e_mean << ' ';
                 //std::cout << "P = " << P << ' ';
                 //std::cout << "rmin = " << find_min(R, N) << ' ';
-                std::cout << "r^2 = " << r2 << ' ';
+                //std::cout << "r^2 = " << r2 << ' ';
+                std::cout << t << ' ';
                 std::cout << '\n';
                 if(save){
                     save_points(out1);

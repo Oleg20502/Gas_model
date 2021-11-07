@@ -12,7 +12,7 @@ template<typename type>
 void process(std::string path)
 {
     unsigned int N;
-    type T, dt, tau, x_size, y_size, z_size, eps, sigma, rmin, v_mean, v_std;
+    type T, dt, tau, x_size, y_size, z_size, eps, sigma, k, rmin, v_mean, v_std;
     bool save;
     std::ifstream out(path);
     std::string str1, str2;
@@ -55,6 +55,10 @@ void process(std::string path)
 
         getline(out, str2);
         getline(out, str1);
+        k = stod(str1);
+
+        getline(out, str2);
+        getline(out, str1);
         rmin = stod(str1);
 
         getline(out, str2);
@@ -73,7 +77,7 @@ void process(std::string path)
     std::cout << N << " particles" << '\n';
     std::cout << T << " model time" << '\n';
 
-    Space<double> s(N, x_size, y_size, z_size, eps, sigma);
+    Space<double> s(N, x_size, y_size, z_size, eps, sigma, k);
 
     //s.set_random_points(rmin);
     s.set_crystal_cell();

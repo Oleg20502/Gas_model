@@ -1,7 +1,6 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import fftconvolve
 #%%
 folder = "Data/"
 file0 = "Params.txt"
@@ -85,23 +84,7 @@ plt.title('T from t', fontsize = 12)
 plt.show()
 
 #%%
-cut1 = 2
-x1 = t[cut1:]
-y1 = r2[cut1:]
-if_b = 1
-A = np.vstack([x1, np.full(len(x1), if_b)]).T
-m, c = np.linalg.lstsq(A, y1, rcond=None)[0]
-D1 = np.round(m/6, 4)
-print('Коэф. диффузии D1 = ' + str(D1))
-#%%
-fig, ax4 = plt.subplots()
-ax4.plot(x1, y1, 'b', label='model data')
-ax4.plot(x1, m*x1+c, 'r', label='LSF approx')
-ax4.set_xlabel('t')
-ax4.set_ylabel('r^2')
-ax4.legend(loc='lower right', fontsize=12)
-plt.title('r^2 from t', fontsize = 12)
-plt.show()
+
 #%%
 # =============================================================================
 # cut2 = 0
@@ -117,25 +100,3 @@ plt.show()
 # plt.show()
 # =============================================================================
 
-#%%
-vx = np.reshape(Vx, (int(time/tau), N))
-vy = np.reshape(Vy, (int(time/tau), N))
-vz = np.reshape(Vz, (int(time/tau), N))
-autocorr0 = np.zeros(2*int(time/tau)-1)
-for i in range(N):
-    sigx = vx[:,i]
-    sigy = vy[:,i]
-    sigz = vz[:,i]
-    autocorr0 += fftconvolve(sigx, sigx[::-1], mode='full')
-    autocorr0 += fftconvolve(sigy, sigy[::-1], mode='full')
-    autocorr0 += fftconvolve(sigy, sigy[::-1], mode='full')
-autocorr0 /= N*int(time/tau)
-autocorr = autocorr0[len(sigx)-1:]
-D3 = np.round(np.sum(autocorr)*tau/3, 4)
-print('Коэф. диффузии D3 = ' + str(D3))
-#%%
-fig, ax = plt.subplots()
-ax.plot(np.arange(len(sigx)), autocorr)
-ax.plot(np.arange(len(sigx)), Z[cut2:])
-ax.set_title('АКФС2', fontsize=12)
-plt.show()

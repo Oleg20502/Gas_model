@@ -16,6 +16,8 @@
 1.0
 #sigma
 1.0
+# Boltsman const
+1.0
 #minimum distance (if random positions are set)
 0.7
 # speed mean
