@@ -36,7 +36,7 @@ protected:
 
     type dx, dy, dz;
 
-    std::mt19937_64 rng{(int)(time(0))};
+    std::mt19937_64 rng{static_cast<long long unsigned int>(time(0))};
 
 public:
     Space(unsigned int n, type x_size, type y_size, type z_size, type eps, type sigma, type K):
@@ -320,7 +320,7 @@ public:
         }
     }
 
-    void run(type T, type dt, type tau, bool save)
+    void run(type T, type dt, type tau, bool save, std::string a_str)
     {
         int I = static_cast<int> (T/dt);
         int J = static_cast<int> (tau/dt);
@@ -349,9 +349,9 @@ public:
         if(save){
             s = std::ios::trunc;
         }
-        std::ofstream out1("Data/Points_data.txt", s);
-        std::ofstream out2("Data/Speed_data.txt", s);
-        std::ofstream out3("Data/System_data.txt", s);
+        std::ofstream out1("Data/Points_data_"+a_str+".txt", s);
+        std::ofstream out2("Data/Speed_data_"+a_str+".txt", s);
+        std::ofstream out3("Data/System_data_"+a_str+".txt", s);
         if(save){
             out1 << std::setprecision(10);
             out1 << std::scientific;

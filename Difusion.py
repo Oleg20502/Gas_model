@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import fftconvolve
 #%%
+a = 2
 folder = "Data/"
-file0 = "Params.txt"
-params = np.loadtxt(file0)
+file0 = "Parameters_"+str(a)+".txt"
+params = np.loadtxt(folder+file0)
 print(params)
 N = int(params[0])
 x_size = int(params[1])
@@ -16,11 +17,9 @@ tau = params[6]
 sigma = params[8]
 
 #%%
-file1 = "Speed_data.txt"
+file1 = "Speed_data_"+str(a)+".txt"
 Data1 = np.loadtxt(folder+file1)
 
-
-#%%
 V = Data1
 Vx = Data1[:, 0]
 Vy = Data1[:, 1]
@@ -32,17 +31,16 @@ v_mean = np.mean(np.sqrt(Vx**2 + Vy**2 + Vz**2))
 print('Средняя скорость: ', np.round(v_mean, 2))
 
 #%%
-file2 = "System_data.txt"
+file2 = "System_data_"+str(a)+".txt"
 Data2 = np.loadtxt(folder+file2)
 
-#%%
 t = Data2[:, 0]
 E = Data2[:, 1]
 Q = Data2[:, 2]
 T = Data2[:, 3]
 r2 = Data2[:, 4]
 #%%
-a = 0.45
+a = 0.4
 S = np.pi*(2*sigma*a)**2
 n = N/x_size/y_size/z_size
 mfp1 = np.round(1/n/S, 5)
@@ -92,5 +90,6 @@ print('Коэф. диффузии D3 = ' + str(D3))
 #%%
 fig, ax = plt.subplots()
 ax.plot(t, autocorr)
+ax.set_xlabel('t')
 ax.set_title('АКФС', fontsize=12)
 plt.show()
