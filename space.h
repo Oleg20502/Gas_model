@@ -15,13 +15,14 @@ template<typename type>
 class Space{
 protected:
     type x_size, y_size, z_size, r, r_max, eps, sigma;
-    type E, Ekin, U, Q, Qx, Qy, Qz, P;
-    type temperature_e, k;
-    type E_mean, Ekin_mean, U_mean, Q_mean, Qx_mean, Qy_mean, Qz_mean, P_mean;
+    type E, Ekin, U, Q, Qx, Qy, Qz, P, free_path_length;
+    type temperature_e, k, d = 1/2, min_R, m = 1.0;
+    type E_mean, Ekin_mean, U_mean, Q_mean, Qx_mean, Qy_mean, Qz_mean, P_mean, R_mean;
     type temperature_e_mean;
     type t;
     type r2;
     unsigned int N;
+    std::vector<Point<type>> p_old;
     std::vector<Point<type>> p;
     std::vector<std::vector<type>> pos0;
     std::vector<std::vector<type>> pos;
@@ -42,6 +43,7 @@ public:
     Space(unsigned int n, type x_size, type y_size, type z_size, type eps, type sigma, type K):
         N{n}, x_size{x_size}, y_size{y_size}, z_size{z_size}, eps{eps}, sigma{sigma}, k{K},
         p{std::vector<Point<type>> (N)},
+        p_old{std::vector<Point<type>> (N)},
         F{std::vector<std::vector<type>> (N, std::vector<type> (N))},
         Fx{std::vector<std::vector<type>> (N, std::vector<type> (N))},
         Fy{std::vector<std::vector<type>> (N, std::vector<type> (N))},
@@ -74,30 +76,49 @@ public:
         }
     }
 
+
     void set_crystal_cell()
     {
-        int n;
-        if((log(N)/log(8))-static_cast<int>(log(N)/log(8)) > 0)
+        int n=1;
+        int x_d = 0;
+        int y_d = 0;
+        int z_d = 0;
+        while(n<N)
         {
-            n = static_cast<int>((log(N)/log(8)))+1;
+            if(x_d < y_d && x_d < z_d)
+            {
+                x_d++;
+                n = n+(y_d+1)*(z_d+1);
+            }
+            else if(y_d < x_d && y_d < z_d)
+            {
+                y_d++;
+                n = n+(x_d+1)*(z_d+1);
+            }
+            else if(z_d < x_d && z_d < y_d)
+            {
+                z_d++;
+                n = n+(y_d+1)*(x_d+1);
+            }
+            else
+            {
+                x_d++;
+                n = n+(y_d+1)*(z_d+1);
+            }
         }
-        else
-        {
-            n = log(N)/log(8);
-        }
-        int number_of_cubes = pow(8,n);
-        float s_x = x_size/pow(2,n);
-        float s_y = y_size/pow(2,n);
-        float s_z = z_size/pow(2,n);
+        double dx = x_size/(x_d+1);
+        double dy = y_size/(d_y+1);
+        double dz = z_size/(d_z+1);
+
         int tmp = 0;
-        for(int i = 0; i<pow(2,n); i++){
-            for(int j =0; j<pow(2,n); j++){
-                for(int k=0; k<pow(2,n); k++){
-                    tmp = i*pow(4,n)+j*pow(2,n)+k;
+        for(int i = 0; i<d_x+1; i++){
+            for(int j =0; j<d_y+1; j++){
+                for(int k=0; k<d_z+1; k++){
+                    tmp = i*(d_y+1)*(d_z+1)+j(k+1)+k;
                     if(tmp < N){
-                        p[tmp].x = s_x*(2*i+1)/2;
-                        p[tmp].y = s_y*(2*k+1)/2;
-                        p[tmp].z = s_z*(2*j+1)/2;
+                        p[tmp].x = dx*(2*i+1)/2;
+                        p[tmp].y = dy*(2*k+1)/2;
+                        p[tmp].z = dz*(2*j+1)/2;
                     }
                 }
             }
@@ -416,6 +437,10 @@ public:
             P_mean += P;
             ++counter;
         }
+        count_free_path_length_mkt();
+        std::cout<<" ";
+        //count_free_path_length_r(sum_koll, T);
+        //std::cout<<" ";
     }
 
     void print_points()
@@ -471,6 +496,79 @@ public:
                 //out >> a >> p[i].v_x >> p[i].v_y >> p[i].v_z;
                 out >> p[i].v_x >> p[i].v_y >> p[i].v_z;
              }
+        }
+    }
+
+    type count_min_R()
+    {
+        min_R = x_size*10;
+        for(int i = 0; i<N; i++)
+        {
+            for(int j = 0; j<N; j++)
+            {
+                if(R[i][j]<min_R)
+                {
+                    min_R = R[i][j];
+                }
+            }
+        }
+        return min_R;
+    }
+
+    type count_mean_r()
+    {
+        type R = 0;
+        for(int i=0; i<N; i++)
+        {
+            for(int j=0; j<N; j++)
+            {
+                R=R+sqrt((p_old[i].x-p_old[j].x)*(p_old[i].x-p_old[j].x)+(p_old[i].y-p_old[j].y)*(p_old[i].y-p_old[j].y)+(p_old[i].y-p_old[j].y)*(p_old[i].y-p_old[j].y));
+            }
+        }
+        R = R/(N*N);
+        return R;
+    }
+
+    void count_free_path_length_mkt()
+    {
+        free_path_length = 1/(sqrt(2)*3.14*(N/(x_size*y_size*z_size))*d*d);
+        std::cout<<free_path_length;
+    }
+
+    int count_koll_soud()
+    {
+        int koll = 0;
+        //R_mean = count_mean_r;
+        for(int i = 0; i<N; i++)
+        {
+            for(int j = 0; j<N; j++)
+            {
+                if(abs(p[i].v_x - p_old[j].v_x) < abs(p[i].v_x/100) + abs(p_old[j].v_x/100) &&
+                abs(p[i].v_y - p_old[j].v_y) < abs(p[i].v_y/100) + abs(p_old[j].v_y/100) &&
+                abs(p[i].v_z - p_old[j].v_z) < abs(p[i].v_z/100) + abs(p_old[j].v_z/100) &&
+                //sqrt((p_old[i].x-p_old[j].x)*(p_old[i].x-p_old[j].x)+(p_old[i].y-p_old[j].y)*(p_old[i].y-p_old[j].y)+(p_old[i].y-p_old[j].y)*(p_old[i].y-p_old[j].y)) < R_mean/10 &&
+                i!=j &&
+                R[i][j] == min_R
+                )
+                {
+                    koll++;
+                }
+            }
+        }
+        koll = koll/2;
+        return koll;
+    }
+
+    void count_free_path_length_r(int sum_koll, type T)
+    {
+        if(sum_koll == 0)
+        {
+            std::cout<<"Not enough data";
+        }
+        else
+        {
+            free_path_length = T*N*(sqrt(2*Ekin/(N*m)))/(sum_koll);
+            std::cout<<" "<<free_path_length;
         }
     }
 };
