@@ -111,10 +111,10 @@ public:
         double dz = z_size/(z_d+1);
 
         int tmp = 0;
-        for(int i = 0; i<d_x+1; i++){
-            for(int j =0; j<d_y+1; j++){
-                for(int k=0; k<d_z+1; k++){
-                    tmp = i*(d_y+1)*(d_z+1)+j(k+1)+k;
+        for(int i = 0; i<x_d+1; i++){
+            for(int j =0; j<y_d+1; j++){
+                for(int k=0; k<z_d+1; k++){
+                    tmp = i*(y_d+1)*(z_d+1)+j(k+1)+k;
                     if(tmp < N){
                         p[tmp].x = dx*(2*i+1)/2;
                         p[tmp].y = dy*(2*k+1)/2;
