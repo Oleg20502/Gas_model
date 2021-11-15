@@ -107,8 +107,8 @@ public:
             }
         }
         double dx = x_size/(x_d+1);
-        double dy = y_size/(d_y+1);
-        double dz = z_size/(d_z+1);
+        double dy = y_size/(y_d+1);
+        double dz = z_size/(z_d+1);
 
         int tmp = 0;
         for(int i = 0; i<d_x+1; i++){
