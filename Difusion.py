@@ -3,10 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import fftconvolve
 #%%
-a = 2
-folder = "Data/"
+a = 8
+folder = "Full_nve_data/"
+subfolder1 = "Points/"
+subfolder2 = "Speed/"
+subfolder3 = "System/"
+#%%
 file0 = "Parameters_"+str(a)+".txt"
-params = np.loadtxt(folder+file0)
+params = np.loadtxt(folder+subfolder3+file0)
 print(params)
 N = int(params[0])
 x_size = int(params[1])
@@ -18,7 +22,7 @@ sigma = params[8]
 
 #%%
 file1 = "Speed_data_"+str(a)+".txt"
-Data1 = np.loadtxt(folder+file1)
+Data1 = np.loadtxt(folder+subfolder2+file1)
 
 V = Data1
 Vx = Data1[:, 0]
@@ -32,7 +36,7 @@ print('Средняя скорость: ', np.round(v_mean, 2))
 
 #%%
 file2 = "System_data_"+str(a)+".txt"
-Data2 = np.loadtxt(folder+file2)
+Data2 = np.loadtxt(folder+subfolder3+file2)
 
 t = Data2[:, 0]
 E = Data2[:, 1]

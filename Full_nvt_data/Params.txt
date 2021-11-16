@@ -1,0 +1,30 @@
+# N (number of particles)
+125
+# x_size
+5
+# y_size
+5
+# z_size
+5
+# T 
+10.0
+# dt
+0.001
+# period to write data
+0.01
+# epsilon
+1.0
+#sigma
+1.0
+# Boltsman const
+1.0
+# температура системы
+1.0
+# парметр корректировки температуры
+0.02
+#minimum distance (if random positions are set)
+0.7
+#if save data
+1
+# save number
+9

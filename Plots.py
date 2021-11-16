@@ -2,17 +2,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
-a = 4
-folder = "Data/"
+a = 8
+folder = "Full_nve_data/"
+subfolder1 = "Points/"
+subfolder2 = "Speed/"
+subfolder3 = "System/"
+#%%
 file0 = "Parameters_"+str(a)+".txt"
-params = np.loadtxt(folder+file0)
+params = np.loadtxt(folder+subfolder3+file0)
 
 N = int(params[0])
 time = params[4]
 tau = params[6]
 #%%
 file1 = "Speed_data_"+str(a)+".txt"
-Data1 = np.loadtxt(folder+file1)
+Data1 = np.loadtxt(folder+subfolder2+file1)
 
 V = Data1
 Vx = Data1[:, 0]
@@ -21,7 +25,7 @@ Vz = Data1[:, 2]
 print(np.size(Vx))
 #%%
 file2 = "System_data_"+str(a)+".txt"
-Data2 = np.loadtxt(folder+file2)
+Data2 = np.loadtxt(folder+subfolder3+file2)
 
 t = Data2[:, 0]
 E = Data2[:, 1]
@@ -69,13 +73,13 @@ n_bins2 = 40
 h, bins = np.histogram(np.abs(np.hstack((Vx, Vy, Vz))), bins = n_bins2, density=False)
 
 if_b = 1
-x = bins[:-1]**2
-y = np.log(h)
+x = bins[np.nonzero(h)]**2
+y = np.log(h[np.nonzero(h)])
 A = np.vstack([x, np.full(len(x), if_b)]).T
 m, c = np.linalg.lstsq(A, y, rcond=None)[0]
 
 fig, ax1 = plt.subplots()
-ax1.scatter(bins[:-1]**2, np.log(h), label='Эксп. точки')
+ax1.scatter(x, y, label='Эксп. точки')
 ax1.plot(x, m*x+c, label='Аппркосимация')
 ax1.legend(loc='upper right', fontsize=12)
 ax1.set_title('Линеаризорованная плотность распределения скоростей')

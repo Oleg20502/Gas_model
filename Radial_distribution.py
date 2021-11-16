@@ -19,10 +19,13 @@ def get_pgu_distance(Pos, i, j):
     return vec_mod(np.min([dx, x_size-dx]), np.min([dy, y_size-dy]), np.min([dz, z_size-dz]))
 
 #%%
-a = 4
-folder = "Data/"
+a = 8
+folder = "Full_nve_data/"
+subfolder1 = "Points/"
+subfolder2 = "Speed/"
+subfolder3 = "System/"
 file0 = "Parameters_"+str(a)+".txt"
-params = np.loadtxt(folder+file0)
+params = np.loadtxt(folder+subfolder3+file0)
 N = int(params[0])
 x_size = int(params[1])
 y_size = int(params[2])
@@ -36,7 +39,7 @@ miss = 'Lattice='+str(x_size)+' 0 0 0 '+str(y_size)+' 0 0 0 '+str(z_size)
 Pos = np.zeros((int(time/tau), N, 3))
 n = N+2
 file1 = "Points_data_"+str(a)+".txt"
-with open(folder+file1) as f:
+with open(folder+subfolder1+file1) as f:
     i = 0
     j = 0
     for line in f.readlines():
@@ -102,10 +105,12 @@ for k in range(1, t_number2+1):
 
 #%%
 #Rh = h2/np.sum(h2)/dR
-Rh = h2
-fig, ax = plt.subplots()
-ax.scatter(R[:-1], Rh, color = 'r')
-plt.show()
+# =============================================================================
+# Rh = h2
+# fig, ax = plt.subplots()
+# ax.scatter(R[:-1], Rh, color = 'r')
+# plt.show()
+# =============================================================================
 #%%
 fig, ax = plt.subplots()
 D = distances2[:I]
