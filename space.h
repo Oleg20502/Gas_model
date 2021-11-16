@@ -1,13 +1,11 @@
 #ifndef space_h
 #define space_h
 
-//#include <iostream>
 #include <vector>
 #include <random>
 #include <algorithm>
 #include <iomanip>
 #include <chrono>
-//#include <functional>
 
 #include "molecule.h"
 #include "vector_functions.h"
@@ -32,11 +30,6 @@ protected:
     std::vector<std::vector<double>> pos;
     std::vector<std::vector<double>> F;
     double Ftmp = 0.0, dFx, dFy, dFz;
-    //std::vector<std::vector<double>> R;
-    //std::vector<std::vector<double>> F;
-    //std::vector<std::vector<double>> Fx;
-    //std::vector<std::vector<double>> Fy;
-    //std::vector<std::vector<double>> Fz;
 
     std::mt19937_64 rng{static_cast<long long unsigned int>(time(0))};
 
@@ -45,11 +38,6 @@ public:
         N{n}, x_size{x_size}, y_size{y_size}, z_size{z_size}, eps{eps}, sigma{sigma}, k{K},
         p{std::vector<Point<double>> (N)},
         F{std::vector<std::vector<double>> (N, std::vector<double> (3, 0))},
-        //F{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        //Fx{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        //Fy{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        //Fz{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        //R{std::vector<std::vector<double>> (N, std::vector<double> (N))},
         pos0{std::vector<std::vector<double>> (N, std::vector<double> (3))}
         {
             x_size2 = x_size/2;
@@ -57,7 +45,6 @@ public:
             z_size2 = z_size/2;
             M = 0.0;
             for(int i=0; i<N; ++i){
-                //Fx[i][i] = Fy[i][i] = Fz[i][i] = R[i][i] = F[i][i] = 0.0;
                 M+= p[i].m;
             }
         }
@@ -150,76 +137,6 @@ public:
         return vec_mod(min(dx, x_size-dx), min(dy, y_size-dy), min(dz, z_size-dz));
     }
 
-    void count_forces()
-    {
-        for(int i = 0; i<N; ++i){
-            F[i][0] = F[i][1] = F[i][2] = 0.0;
-        }
-        for(int i = 0; i<N-1; ++i){
-            for(int j = i+1; j<N; ++j){
-                r = get_distance(i, j);
-
-                dx = p[i].x - p[j].x;
-                if(dx > x_size2) dx -= x_size;
-                else if(dx < -x_size2) dx += x_size;
-
-                dy = p[i].y - p[j].y;
-                if(dy > y_size2) dy -= y_size;
-                else if(dy < -y_size2) dy += y_size;
-
-                dz = p[i].z - p[j].z;
-                if(dz > z_size2) dz -= z_size;
-                else if(dz < -z_size2) dz += z_size;
-
-                //r = sqrt(dx*dx + dy*dy + dz*dz);
-                Ftmp = LJP_force(r, eps, sigma);
-                //std::cout << Ftmp << ' ';
-                dFx = Ftmp * dx / r;
-                dFy = Ftmp * dy / r;
-                dFz = Ftmp * dz / r;
-                F[i][0] += dFx;
-                F[i][1] += dFy;
-                F[i][2] += dFz;
-
-                F[j][0] -= dFx;
-                F[j][1] -= dFy;
-                F[j][2] -= dFz;
-            }
-        }
-        //std::cout << '\n';
-    }
-
-//    inline
-//    void count_forces(int i, int j)
-//    {
-//        r = get_distance(i, j);
-//        R[i][j] = r;
-//        R[j][i] = r;
-//
-//        F[i][j] = LJP_force(r, eps, sigma);
-//        F[j][i] = F[i][j];
-//
-//        dx = p[i].x - p[j].x;
-//        if(dx > x_size2) dx -= x_size;
-//        else if(dx < -x_size2) dx += x_size;
-//
-//        dy = p[i].y - p[j].y;
-//        if(dy > y_size2) dy -= y_size;
-//        else if(dy < -y_size2) dy += y_size;
-//
-//        dz = p[i].z - p[j].z;
-//        if(dz > z_size2) dz -= z_size;
-//        else if(dz < -z_size2) dz += z_size;
-//
-//        Fx[i][j] = F[i][j] * dx / r;
-//        Fy[i][j] = F[i][j] * dy / r;
-//        Fz[i][j] = F[i][j] * dz / r;
-//
-//        Fx[j][i] = -Fx[i][j];
-//        Fy[j][i] = -Fy[i][j];
-//        Fz[j][i] = -Fz[i][j];
-//    }
-//
     inline
     void change_pot_energy(int i)
     {
@@ -296,17 +213,24 @@ public:
     }
 
     inline
-    void change_kin_energy(int i)
+    void count_kin_energy()
     {
-        Ekin += p[i].m * (pow(p[i].v_x, 2) + pow(p[i].v_y, 2) + pow(p[i].v_z, 2)) * 0.5;
+        Ekin = 0.0;
+        for(int i=0; i<N; ++i){
+            Ekin += p[i].m * (pow(p[i].v_x, 2) + pow(p[i].v_y, 2) + pow(p[i].v_z, 2)) * 0.5;
+        }
     }
 
     inline
-    void change_impulse(int i)
+    void count_impulse()
     {
-        Qx += p[i].v_x * p[i].m;
-        Qy += p[i].v_y * p[i].m;
-        Qz += p[i].v_z * p[i].m;
+        Qx = Qy = Qz = 0.0;
+        for(int i=0; i<N; ++i){
+            Qx += p[i].v_x * p[i].m;
+            Qy += p[i].v_y * p[i].m;
+            Qz += p[i].v_z * p[i].m;
+        }
+        Q = vec_mod(Qx, Qy, Qz);
     }
 
     void count_r_square_mean()

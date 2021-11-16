@@ -59,15 +59,15 @@ void process(std::string path)
 
         getline(out, str2);
         getline(out, str1);
-        rmin = stod(str1);
-
-        getline(out, str2);
-        getline(out, str1);
         temp0 = stod(str1);
 
         getline(out, str2);
         getline(out, str1);
         xi = stod(str1);
+
+        getline(out, str2);
+        getline(out, str1);
+        rmin = stod(str1);
 
         getline(out, str2);
         getline(out, str1);
@@ -99,8 +99,6 @@ void process(std::string path)
     //s.set_random_points(rmin);
     s.set_grid_state();
     s.set_random_speed(0.0, k*temp0/2);
-    s.cor_mean_speed();
-    s.cor_speed();
 
     //s.load_points("Data/Points_data.txt");
     //s.load_speed("Data/Speed_data.txt");

@@ -99,7 +99,6 @@ void process(std::string path)
     //s.set_random_points(rmin);
     s.set_grid_state();
     s.set_random_speed(v_mean, v_std);
-    s.cor_mean_speed();
 
     //s.load_points("Data/Points_data.txt");
     //s.load_speed("Data/Speed_data.txt");

@@ -21,29 +21,58 @@ public:
 
 
     inline
+    void count_forces()
+    {
+        U = 0.0;
+        for(int i = 0; i<N; ++i){
+            F[i][0] = F[i][1] = F[i][2] = 0.0;
+        }
+        for(int i = 0; i<N-1; ++i){
+            for(int j = i+1; j<N; ++j){
+                dx = p[i].x - p[j].x;
+                if(dx > x_size2) dx -= x_size;
+                else if(dx < -x_size2) dx += x_size;
+
+                dy = p[i].y - p[j].y;
+                if(dy > y_size2) dy -= y_size;
+                else if(dy < -y_size2) dy += y_size;
+
+                dz = p[i].z - p[j].z;
+                if(dz > z_size2) dz -= z_size;
+                else if(dz < -z_size2) dz += z_size;
+
+                r = sqrt(dx*dx + dy*dy + dz*dz);
+                U += LJP(r, eps, sigma);
+                Ftmp = LJP_force(r, eps, sigma);
+                dFx = Ftmp * dx / r;
+                dFy = Ftmp * dy / r;
+                dFz = Ftmp * dz / r;
+                F[i][0] += dFx;
+                F[i][1] += dFy;
+                F[i][2] += dFz;
+
+                F[j][0] -= dFx;
+                F[j][1] -= dFy;
+                F[j][2] -= dFz;
+            }
+        }
+    }
+
+    inline
     void iter(double dt)
     {
-        Qx = Qy = Qz = 0.0;
-        Ekin = U = 0.0;
         for(int i = 0; i<N; ++i){
             change_speed(i, dt*0.5);
             change_position(i, dt);
         }
 
-//        for(int i = 0; i<N-1; ++i){
-//            for(int j = i+1; j<N; ++j){
-//                count_forces(i, j);
-//            }
-//        }
         count_forces();
 
         for(int i = 0; i<N; ++i){
             change_speed(i, dt*0.5);
-            change_impulse(i);
-            change_kin_energy(i);
-            change_pot_energy(i);
         }
-        Q = vec_mod(Qx, Qy, Qz);
+        count_impulse();
+        count_kin_energy();
         E = Ekin + U;
         temperature_e = 2.0/3*Ekin/N/k;
     }
@@ -56,9 +85,8 @@ public:
         I = static_cast<int> (T/dt);
         J = static_cast<int> (tau/dt);
 
-        E = Ekin = U = Q = temperature_e = r2 = 0.0;
         E_mean = Ekin_mean = U_mean = Q_mean = Qx_mean = Qy_mean = Qz_mean = 0.0;
-        temperature_e_mean = t = 0.0;
+        temperature_e_mean = t = r2 = 0.0;
 
         for(int i = 0; i<N; ++i){
             pos0[i][0] = p[i].x;
@@ -67,18 +95,14 @@ public:
         }
         pos = pos0;
 
-        count_forces();
-        for(int i = 0; i<N; ++i){
-            for(int j = i+1; j<N; ++j){
-                //count_forces(i, j);
-            }
-            change_impulse(i);
-            change_kin_energy(i);
-            change_pot_energy(i);
-        }
-        Q = vec_mod(Qx, Qy, Qz);
+        count_impulse();
+        cor_mean_speed();
+        count_impulse();
+        count_kin_energy();
         E = Ekin + U;
         temperature_e = 2.0/3*Ekin/N/k;
+
+        count_forces();
     }
 
     void run(const bool save, std::string file1, std::string file2, std::string file3)
@@ -121,7 +145,7 @@ public:
 
                 std::cout << "E = " << E_mean << ' ';
                 //std::cout << "Impulse = " << Q_mean << ' ';
-                std::cout << "Te = " << temperature_e_mean << ' ';
+                //std::cout << "Te = " << temperature_e_mean << ' ';
                 //std::cout << "rmin = " << find_min(R, N) << ' ';
                 //std::cout << "r^2 = " << r2 << ' ';
                 std::cout << "time = " << t << ' ';

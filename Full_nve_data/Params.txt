@@ -1,13 +1,13 @@
 # N (number of particles)
-100
+80
 # x_size
-5
+10
 # y_size
-5
+10
 # z_size
-5
+10
 # T 
-15.0
+10.0
 # dt
 0.001
 # period to write data
@@ -27,4 +27,4 @@
 #if save data
 1
 # save number
-14
+5

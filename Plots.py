@@ -2,8 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
-a = 13
-folder = "Full_nve_data/"
+a = 2
+folder = "Full_nvt_data/"
 subfolder1 = "Points/"
 subfolder2 = "Speed/"
 subfolder3 = "System/"

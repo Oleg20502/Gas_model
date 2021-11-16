@@ -1,13 +1,13 @@
 # N (number of particles)
-125
+50
 # x_size
-5
+10
 # y_size
-5
+10
 # z_size
-5
+10
 # T 
-10.0
+15.0
 # dt
 0.001
 # period to write data
@@ -21,10 +21,10 @@
 # температура системы
 1.0
 # парметр корректировки температуры
-0.02
+0.003
 #minimum distance (if random positions are set)
 0.7
 #if save data
 1
 # save number
-9
+3
