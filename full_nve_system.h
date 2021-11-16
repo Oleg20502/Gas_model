@@ -19,44 +19,6 @@ public:
     Full_nve_system(unsigned int n, double x_size, double y_size, double z_size, double eps, double sigma, double K):
                     Space(n, x_size, y_size, z_size, eps, sigma, K) {}
 
-    inline
-    void count_forces(int i, int j)
-    {
-        r = get_distance(i, j);
-        R[i][j] = r;
-        R[j][i] = r;
-
-        F[i][j] = LJP_force(r, eps, sigma);
-        F[j][i] = F[i][j];
-
-        dx = p[i].x - p[j].x;
-        if(dx > x_size2) dx -= x_size;
-        else if(dx < -x_size2) dx += x_size;
-
-        dy = p[i].y - p[j].y;
-        if(dy > y_size2) dy -= y_size;
-        else if(dy < -y_size2) dy += y_size;
-
-        dz = p[i].z - p[j].z;
-        if(dz > z_size2) dz -= z_size;
-        else if(dz < -z_size2) dz += z_size;
-
-        Fx[i][j] = F[i][j] * dx / r;
-        Fy[i][j] = F[i][j] * dy / r;
-        Fz[i][j] = F[i][j] * dz / r;
-
-        Fx[j][i] = -Fx[i][j];
-        Fy[j][i] = -Fy[i][j];
-        Fz[j][i] = -Fz[i][j];
-    }
-
-    inline
-    void change_pot_energy(int i)
-    {
-        for(int j = i+1; j<N; ++j){
-            U += LJP(R[i][j], eps, sigma);
-        }
-    }
 
     inline
     void iter(double dt)
@@ -68,11 +30,12 @@ public:
             change_position(i, dt);
         }
 
-        for(int i = 0; i<N-1; ++i){
-            for(int j = i+1; j<N; ++j){
-                count_forces(i, j);
-            }
-        }
+//        for(int i = 0; i<N-1; ++i){
+//            for(int j = i+1; j<N; ++j){
+//                count_forces(i, j);
+//            }
+//        }
+        count_forces();
 
         for(int i = 0; i<N; ++i){
             change_speed(i, dt*0.5);
@@ -104,9 +67,10 @@ public:
         }
         pos = pos0;
 
-        for(int i = 0; i<N-1; ++i){
+        count_forces();
+        for(int i = 0; i<N; ++i){
             for(int j = i+1; j<N; ++j){
-                count_forces(i, j);
+                //count_forces(i, j);
             }
             change_impulse(i);
             change_kin_energy(i);

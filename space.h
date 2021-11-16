@@ -30,11 +30,13 @@ protected:
     std::vector<Point<double>> p;
     std::vector<std::vector<double>> pos0;
     std::vector<std::vector<double>> pos;
-    std::vector<std::vector<double>> R;
     std::vector<std::vector<double>> F;
-    std::vector<std::vector<double>> Fx;
-    std::vector<std::vector<double>> Fy;
-    std::vector<std::vector<double>> Fz;
+    double Ftmp = 0.0, dFx, dFy, dFz;
+    //std::vector<std::vector<double>> R;
+    //std::vector<std::vector<double>> F;
+    //std::vector<std::vector<double>> Fx;
+    //std::vector<std::vector<double>> Fy;
+    //std::vector<std::vector<double>> Fz;
 
     std::mt19937_64 rng{static_cast<long long unsigned int>(time(0))};
 
@@ -42,11 +44,12 @@ public:
     Space(unsigned int n, double x_size, double y_size, double z_size, double eps, double sigma, double K):
         N{n}, x_size{x_size}, y_size{y_size}, z_size{z_size}, eps{eps}, sigma{sigma}, k{K},
         p{std::vector<Point<double>> (N)},
-        F{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        Fx{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        Fy{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        Fz{std::vector<std::vector<double>> (N, std::vector<double> (N))},
-        R{std::vector<std::vector<double>> (N, std::vector<double> (N))},
+        F{std::vector<std::vector<double>> (N, std::vector<double> (3, 0))},
+        //F{std::vector<std::vector<double>> (N, std::vector<double> (N))},
+        //Fx{std::vector<std::vector<double>> (N, std::vector<double> (N))},
+        //Fy{std::vector<std::vector<double>> (N, std::vector<double> (N))},
+        //Fz{std::vector<std::vector<double>> (N, std::vector<double> (N))},
+        //R{std::vector<std::vector<double>> (N, std::vector<double> (N))},
         pos0{std::vector<std::vector<double>> (N, std::vector<double> (3))}
         {
             x_size2 = x_size/2;
@@ -54,7 +57,7 @@ public:
             z_size2 = z_size/2;
             M = 0.0;
             for(int i=0; i<N; ++i){
-                Fx[i][i] = Fy[i][i] = Fz[i][i] = R[i][i] = F[i][i] = 0.0;
+                //Fx[i][i] = Fy[i][i] = Fz[i][i] = R[i][i] = F[i][i] = 0.0;
                 M+= p[i].m;
             }
         }
@@ -131,19 +134,10 @@ public:
     inline
     void cor_mean_speed()
     {
-        dx = dy = dz = 0.0;
         for(int i=0; i<N; ++i){
-            dx += p[i].v_x * p[i].m;
-            dy += p[i].v_y * p[i].m;
-            dz += p[i].v_z * p[i].m;
-        }
-        dx /= M;
-        dy /= M;
-        dz /= M;
-        for(int i=0; i<N; ++i){
-            p[i].v_x -= dx;
-            p[i].v_y -= dy;
-            p[i].v_z -= dz;
+            p[i].v_x -= Qx/M;
+            p[i].v_y -= Qy/M;
+            p[i].v_z -= Qz/M;
         }
     }
 
@@ -154,6 +148,84 @@ public:
         dy = abs(p[i].y - p[j].y);
         dz = abs(p[i].z - p[j].z);
         return vec_mod(min(dx, x_size-dx), min(dy, y_size-dy), min(dz, z_size-dz));
+    }
+
+    void count_forces()
+    {
+        for(int i = 0; i<N; ++i){
+            F[i][0] = F[i][1] = F[i][2] = 0.0;
+        }
+        for(int i = 0; i<N-1; ++i){
+            for(int j = i+1; j<N; ++j){
+                r = get_distance(i, j);
+
+                dx = p[i].x - p[j].x;
+                if(dx > x_size2) dx -= x_size;
+                else if(dx < -x_size2) dx += x_size;
+
+                dy = p[i].y - p[j].y;
+                if(dy > y_size2) dy -= y_size;
+                else if(dy < -y_size2) dy += y_size;
+
+                dz = p[i].z - p[j].z;
+                if(dz > z_size2) dz -= z_size;
+                else if(dz < -z_size2) dz += z_size;
+
+                //r = sqrt(dx*dx + dy*dy + dz*dz);
+                Ftmp = LJP_force(r, eps, sigma);
+                //std::cout << Ftmp << ' ';
+                dFx = Ftmp * dx / r;
+                dFy = Ftmp * dy / r;
+                dFz = Ftmp * dz / r;
+                F[i][0] += dFx;
+                F[i][1] += dFy;
+                F[i][2] += dFz;
+
+                F[j][0] -= dFx;
+                F[j][1] -= dFy;
+                F[j][2] -= dFz;
+            }
+        }
+        //std::cout << '\n';
+    }
+
+//    inline
+//    void count_forces(int i, int j)
+//    {
+//        r = get_distance(i, j);
+//        R[i][j] = r;
+//        R[j][i] = r;
+//
+//        F[i][j] = LJP_force(r, eps, sigma);
+//        F[j][i] = F[i][j];
+//
+//        dx = p[i].x - p[j].x;
+//        if(dx > x_size2) dx -= x_size;
+//        else if(dx < -x_size2) dx += x_size;
+//
+//        dy = p[i].y - p[j].y;
+//        if(dy > y_size2) dy -= y_size;
+//        else if(dy < -y_size2) dy += y_size;
+//
+//        dz = p[i].z - p[j].z;
+//        if(dz > z_size2) dz -= z_size;
+//        else if(dz < -z_size2) dz += z_size;
+//
+//        Fx[i][j] = F[i][j] * dx / r;
+//        Fy[i][j] = F[i][j] * dy / r;
+//        Fz[i][j] = F[i][j] * dz / r;
+//
+//        Fx[j][i] = -Fx[i][j];
+//        Fy[j][i] = -Fy[i][j];
+//        Fz[j][i] = -Fz[i][j];
+//    }
+//
+    inline
+    void change_pot_energy(int i)
+    {
+        for(int j = i+1; j<N; ++j){
+            U += LJP(get_distance(i, j), eps, sigma);
+        }
     }
 
 //    inline
@@ -197,9 +269,9 @@ public:
     inline
     void change_speed(int i, double dt)
     {
-        p[i].v_x += sum(Fx[i])/p[i].m * dt;
-        p[i].v_y += sum(Fy[i])/p[i].m * dt;
-        p[i].v_z += sum(Fz[i])/p[i].m * dt;
+        p[i].v_x += F[i][0]/p[i].m * dt;
+        p[i].v_y += F[i][1]/p[i].m * dt;
+        p[i].v_z += F[i][2]/p[i].m * dt;
     }
 
     inline

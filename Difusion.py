@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import fftconvolve
 #%%
-a = 8
+a = 12
 folder = "Full_nve_data/"
 subfolder1 = "Points/"
 subfolder2 = "Speed/"
