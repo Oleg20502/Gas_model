@@ -109,7 +109,7 @@ public:
     {
         int counter = 0;
         std::cout << std::scientific;
-        std::cout << std::setprecision(10);
+        std::cout << std::setprecision(5);
         auto s = std::ios::app;
         if(save){
             s = std::ios::trunc;
@@ -145,7 +145,7 @@ public:
 
                 std::cout << "E = " << E_mean << ' ';
                 //std::cout << "Impulse = " << Q_mean << ' ';
-                //std::cout << "Te = " << temperature_e_mean << ' ';
+                std::cout << "Te = " << temperature_e_mean << ' ';
                 //std::cout << "rmin = " << find_min(R, N) << ' ';
                 //std::cout << "r^2 = " << r2 << ' ';
                 std::cout << "time = " << t << ' ';

@@ -13,7 +13,7 @@ void process(std::string path)
     int a;
     type T, dt, tau, x_size, y_size, z_size, eps, sigma, k, rmin, v_mean, v_std;
     bool save;
-    std::string par = "Params.txt";
+    std::string par = "Params_full_nve.txt";
     std::ifstream out(path+par);
     std::string str1, str2;
     if (out.is_open()){

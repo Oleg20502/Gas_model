@@ -19,7 +19,7 @@ def get_pgu_distance(Pos, i, j):
     return vec_mod(np.min([dx, x_size-dx]), np.min([dy, y_size-dy]), np.min([dz, z_size-dz]))
 
 #%%
-a = 8
+a = 6
 folder = "Full_nve_data/"
 subfolder1 = "Points/"
 subfolder2 = "Speed/"
@@ -59,29 +59,6 @@ with open(folder+subfolder1+file1) as f:
 # Pos[:, 4*N:5*N, 0] -= x_size
 # Pos[:, 5*N:6*N, 1] -= y_size
 # Pos[:, 6*N:7*N, 2] -= z_size
-# =============================================================================
-#%%
-# =============================================================================
-# t_number = 10
-# step = int(time/tau)//(t_number+1)
-# distances = np.zeros(t_number * N * (N-1))
-# I = 0
-# for k in range(1, t_number+1):
-#     for i in range(N):
-#         for j in range(N):
-#             if i != j:
-#                 distances[I] = get_pgu_distance(Pos[k*step], i, j)
-#                 I += 1
-# distances /= N*t_number
-# #%%
-# fig, ax = plt.subplots()
-# ax.hist(distances[:])
-# plt.show()
-# 
-# #%%
-# fig, ax = plt.subplots()
-# ax.plot(np.arange(len(distances)), distances[:])
-# plt.show()
 # =============================================================================
 #%%
 Rmax = min(x_size, y_size, z_size)/2
@@ -127,7 +104,7 @@ plt.show()
 
 #%%
 n = N/x_size/y_size/z_size
-g = h3/(4*np.pi*R[:-1]**2)/n * 50
+g = h3/(4*np.pi*R[:-1]**2)/n * N*0.5
 fig, ax = plt.subplots()
 ax.plot(R[:-1], g[:])
 ax.set_title('Парная корреляционная функция')

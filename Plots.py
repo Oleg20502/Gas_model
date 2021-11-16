@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
-a = 2
+a = 8
 folder = "Full_nvt_data/"
 subfolder1 = "Points/"
 subfolder2 = "Speed/"
@@ -10,7 +10,6 @@ subfolder3 = "System/"
 #%%
 file0 = "Parameters_"+str(a)+".txt"
 params = np.loadtxt(folder+subfolder3+file0)
-
 N = int(params[0])
 time = params[4]
 tau = params[6]
@@ -46,29 +45,6 @@ ax4.set_title('V histogram', fontsize = 12)
 plt.tight_layout()
 plt.show()
 #%%
-# =============================================================================
-# Vxyz = np.hstack((Vx, Vy, Vz))
-# Vmax = np.sqrt(np.max(Vxyz))
-# Vmin = 0.0
-# dV = 1.0
-# Vh = np.arange(Vmin, Vmax, dV)**2
-# =============================================================================
-#%%
-# =============================================================================
-# fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2,2)
-# ax1.hist(Vx**2, density = True, log = True)
-# ax1.set_title('Vx histogram', fontsize = 12)
-# ax2.hist(Vy**2, density = True, log = True)
-# ax2.set_title('Vy histogram', fontsize = 12)
-# ax3.hist(Vz**2, density = True, log = True)
-# ax3.set_title('Vz histogram', fontsize = 12)
-# #ax4.hist(np.sqrt(Vx**2 + Vy**2 + Vz**2), density = True)
-# h, bins, p = ax4.hist(np.hstack((Vx, Vy, Vz))**2, bins = 50, density = True, log = True)
-# ax4.set_title('V histogram', fontsize = 12)
-# plt.tight_layout()
-# plt.show()
-# =============================================================================
-#%%
 n_bins2 = 40
 h, bins = np.histogram(np.abs(np.hstack((Vx, Vy, Vz))), bins = n_bins2, density=False)
 
@@ -103,15 +79,12 @@ plt.title('Impulse from t', fontsize = 12)
 plt.show()
 #%%
 fig, ax3 = plt.subplots()
-ax3.plot(t[1:], T[1:])
+ax3.plot(t[:], T[:])
 plt.title('T from t', fontsize = 12)
 ax3.set_xlabel('t')
 plt.show()
 
 print('Средняя температура: ', np.round(np.mean(T), 3))
-
-#%%
-
 #%%
 # =============================================================================
 # cut2 = 0

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import fftconvolve
 #%%
-a = 12
+a = 7
 folder = "Full_nve_data/"
 subfolder1 = "Points/"
 subfolder2 = "Speed/"
@@ -11,7 +11,6 @@ subfolder3 = "System/"
 #%%
 file0 = "Parameters_"+str(a)+".txt"
 params = np.loadtxt(folder+subfolder3+file0)
-print(params)
 N = int(params[0])
 x_size = int(params[1])
 y_size = int(params[2])

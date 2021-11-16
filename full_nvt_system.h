@@ -32,7 +32,7 @@ public:
     inline
     void cor_speed()
     {
-        double e = sqrt(Ekin0/Ekin);
+        double e = sqrt(1 - dt / xi * (1 - Ekin0/Ekin));
         for(int i=0; i<N; ++i){
             p[i].v_x *= e;
             p[i].v_y *= e;
@@ -44,14 +44,13 @@ public:
     void count_forces()
     {
         U = 0.0;
-        for(int i = 0; i<N; ++i){
-            F[i][0] = F[i][1] = F[i][2] = 0.0;
-        }
         double e = xi*(Ekin0/Ekin - 1);
         for(int i = 0; i<N; ++i){
-            F[i][0] += e * p[i].v_x;
-            F[i][1] += e * p[i].v_y;
-            F[i][2] += e * p[i].v_z;
+            F[i][0] = 0;
+            F[i][1] = 0;
+            F[i][2] = 0;
+        }
+        for(int i = 0; i<N; ++i){
             for(int j = i+1; j<N; ++j){
                 dx = p[i].x - p[j].x;
                 if(dx > x_size2) dx -= x_size;
@@ -95,6 +94,7 @@ public:
         for(int i = 0; i<N; ++i){
             change_speed(i, dt*0.5);
         }
+        cor_speed();
         count_impulse();
         count_kin_energy();
         E = Ekin + U;
